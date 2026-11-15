@@ -7,8 +7,11 @@ using Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<JwtHandler>();
 builder.Services.AddScoped<BcryptHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+var jwtHandler = new JwtHandler(builder.Configuration);
+jwtHandler.ConfigureToken(builder.Services);
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 builder.Services.AddDbContext<UserContext>(o => o.UseNpgsql(builder.Configuration["ConnectionStrings:ConnectionPostGre"]));

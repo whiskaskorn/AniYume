@@ -7,4 +7,9 @@ public class BcryptHandler
         return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
     }
 
+    public bool VerifyHashPass(string password, string hashPass)
+    {
+        return BCrypt.Net.BCrypt.EnhancedVerify(password,hashPass);
+    }
+
 }

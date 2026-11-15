@@ -8,6 +8,7 @@ using MimeKit;
 using MailKit.Net.Smtp;
 using Models;
 using Validation;
+using System.Security.Claims;
 
 namespace Handlers;
 
@@ -72,6 +73,17 @@ public class UserHandler
         return Results.Created();
     }
 
+    public static async Task<IResult> GetOne(ClaimsPrincipal claimsUser,UserContext db)
+    {
+        var userIdString = claimsUser.FindFirstValue("Id");
+        if(userIdString == null)
+        {
+            return Results.BadRequest("В клаймах айді не знайдений!");
+        }
+        int userIdInt = Convert.ToInt32(userIdString);
+        var user = await db.Users.FindAsync(userIdInt);
+        return Results.Ok(user);
+    }
     public static async Task<IResult> ConfirmEmail(UserConfirmEmailDTO dto,IValidator<UserConfirmEmailDTO> validator, UserContext db)
     {
         var validationResult = validator.Validate(dto);
@@ -87,11 +99,12 @@ public class UserHandler
         }
 
         user.isExsistsEmail = true;
+        user.CodeForConfirmEmail = null;
         await db.SaveChangesAsync();
         return Results.Ok();
     }
 
-    public static async Task<IResult> Login(UserLoginDTO dto, IValidator<UserLoginDTO> validator,UserContext db)
+    public static async Task<IResult> Login(UserLoginDTO dto, IValidator<UserLoginDTO> validator,UserContext db,BcryptHandler bcryptHandler, JwtHandler jwtHandler)
     {
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
@@ -110,6 +123,27 @@ public class UserHandler
             return Results.BadRequest("Для початку підтвердіть пошту!");
         }
 
-        return Results.Ok();
+        if(!bcryptHandler.VerifyHashPass(dto.Password!, user.HashPassword!))
+        {
+            return Results.BadRequest("Неправильний пароль!");
+        }
+
+        var jwtToken = jwtHandler.GenerateToken(user);
+        
+        return Results.Ok(jwtToken);
+    }
+
+    public static async Task<IResult> Delete(ClaimsPrincipal claimsUser,UserContext db)
+    {
+        var userIdString = claimsUser.FindFirstValue("Id");
+        if(userIdString == null)
+        {
+            return Results.BadRequest("В клаймах айді не знайдений!");
+        }
+        int userIdInt = Convert.ToInt32(userIdString);
+        var user = await db.Users.FindAsync(userIdInt);
+        db.Users.Remove(user!);
+        await db.SaveChangesAsync();
+        return Results.Ok(user);
     }
 }
