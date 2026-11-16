@@ -41,7 +41,7 @@ public class UserHandler
         }
     }
 
-    public static async Task<IResult> GetAll(UserContext db)
+    public static async Task<IResult> GetAll(AppDbContext db)
     {   var user = await db.Users.Select(userFromDb => new UserGetDTO
         {
             Id = userFromDb.Id,
@@ -51,7 +51,7 @@ public class UserHandler
         return Results.Ok(user);
     }
 
-    public static async Task<IResult> GetOne(ClaimsPrincipal claimsUser,UserContext db)
+    public static async Task<IResult> GetOne(ClaimsPrincipal claimsUser,AppDbContext db)
     {
         var userIdString = claimsUser.FindFirstValue("Id");
         if(userIdString == null)
@@ -68,7 +68,7 @@ public class UserHandler
 
         return Results.Ok(user);
     }
-    public static async Task<IResult> Registration(UserRegistrationDTO dto, IValidator<UserRegistrationDTO> validator,UserContext db,BcryptHandler bcryptHandler, IConfiguration configuration)
+    public static async Task<IResult> Registration(UserRegistrationDTO dto, IValidator<UserRegistrationDTO> validator,AppDbContext db,BcryptHandler bcryptHandler, IConfiguration configuration)
     {
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
@@ -96,7 +96,7 @@ public class UserHandler
         await db.SaveChangesAsync();
         return Results.Created();
     }
-    public static async Task<IResult> ConfirmEmail(UserConfirmEmailDTO dto,IValidator<UserConfirmEmailDTO> validator, UserContext db)
+    public static async Task<IResult> ConfirmEmail(UserConfirmEmailDTO dto,IValidator<UserConfirmEmailDTO> validator, AppDbContext db)
     {
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
@@ -116,7 +116,7 @@ public class UserHandler
         return Results.Ok();
     }
 
-    public static async Task<IResult> Login(UserLoginDTO dto, IValidator<UserLoginDTO> validator,UserContext db,BcryptHandler bcryptHandler, JwtHandler jwtHandler)
+    public static async Task<IResult> Login(UserLoginDTO dto, IValidator<UserLoginDTO> validator,AppDbContext db,BcryptHandler bcryptHandler, JwtHandler jwtHandler)
     {
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
@@ -145,7 +145,7 @@ public class UserHandler
         return Results.Ok(jwtToken);
     }
 
-    public static async Task<IResult> Put(UserPutDTO dto,IValidator<UserPutDTO> validator,ClaimsPrincipal claimsUser,BcryptHandler bcryptHandler, UserContext db,IConfiguration configuration)
+    public static async Task<IResult> Put(UserPutDTO dto,IValidator<UserPutDTO> validator,ClaimsPrincipal claimsUser,BcryptHandler bcryptHandler, AppDbContext db,IConfiguration configuration)
     {
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
@@ -199,7 +199,7 @@ public class UserHandler
         return Results.Ok("Користувач змінений!");
     }
 
-    public static async Task<IResult> Delete(ClaimsPrincipal claimsUser,UserContext db)
+    public static async Task<IResult> Delete(ClaimsPrincipal claimsUser,AppDbContext db)
     {
         var userIdString = claimsUser.FindFirstValue("Id");
         if(userIdString == null)

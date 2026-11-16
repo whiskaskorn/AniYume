@@ -1,5 +1,5 @@
 using Data;
-using Endpoints.Api;
+using Endpoints;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using Handlers;
@@ -14,11 +14,12 @@ var jwtHandler = new JwtHandler(builder.Configuration);
 jwtHandler.ConfigureToken(builder.Services);
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
-builder.Services.AddDbContext<UserContext>(o => o.UseNpgsql(builder.Configuration["ConnectionStrings:ConnectionPostGre"]));
+builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(builder.Configuration["ConnectionStrings:ConnectionPostGre"]));
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 MapEndpoints.MapUserEndpoints(app);
+MapEndpoints.MapAnimeEndpoints(app);
 app.Run();
