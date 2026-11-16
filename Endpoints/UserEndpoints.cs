@@ -13,7 +13,7 @@ public static class MapEndpoints
         authGroup.MapPost("/registration",UserHandler.Registration);
         authGroup.MapPost("/confirmEmail",UserHandler.ConfirmEmail);
         authGroup.MapPost("/login",UserHandler.Login);
-        baseGroup.MapPut("/",()=>{});
+        baseGroup.MapPut("/me",UserHandler.Put);
         baseGroup.MapDelete("/me",UserHandler.Delete);
     }
 }

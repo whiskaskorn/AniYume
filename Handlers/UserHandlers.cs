@@ -20,11 +20,11 @@ public class UserHandler
         return random.Next(100000,999999);
     }
 
-    public static async Task SendMessage(UserRegistrationDTO dto,int code, IConfiguration configuration)
+    public static async Task SendMessage(string Username,string Email,int code, IConfiguration configuration)
     {
         var message = new MimeMessage();
         message.From.Add( new MailboxAddress("Whiskas", "whiskaskorn@gmail.com"));
-        message.To.Add( new MailboxAddress(dto.Username,dto.Email!));
+        message.To.Add( new MailboxAddress(Username,Email));
         message.Subject = $"Code: {code}";
         message.Body = new TextPart("plain")
         {
@@ -40,6 +40,7 @@ public class UserHandler
             await client.DisconnectAsync(true);
         }
     }
+
     public static async Task<IResult> GetAll(UserContext db)
     {   var users = await db.Users.ToListAsync();
         return Results.Ok(users);
@@ -59,7 +60,7 @@ public class UserHandler
         }
 
         int code = GenerateCode();
-        await SendMessage(dto,code, configuration);
+        await SendMessage(dto.Username!,dto.Email!,code, configuration);
 
         var User = new User{
             Username = dto.Username,
@@ -131,6 +132,60 @@ public class UserHandler
         var jwtToken = jwtHandler.GenerateToken(user);
         
         return Results.Ok(jwtToken);
+    }
+
+    public static async Task<IResult> Put(UserPutDTO dto,IValidator<UserPutDTO> validator,ClaimsPrincipal claimsUser,BcryptHandler bcryptHandler, UserContext db,IConfiguration configuration)
+    {
+        var validationResult = validator.Validate(dto);
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var userIdString = claimsUser.FindFirstValue("Id");
+        if(userIdString == null)
+        {
+            return Results.BadRequest("В клаймах айді не знайдений!");
+        }
+        int userIdInt = int.Parse(userIdString);
+        var user = await db.Users.FindAsync(userIdInt);
+        if(user == null)
+        {
+            return Results.BadRequest("Користувач не знайден!");
+        }
+        
+        var isEsxistsUser = await db.Users.FirstOrDefaultAsync(x => x.Id != userIdInt && (x.Username == dto.Username || x.Email == dto.Email));
+        if (isEsxistsUser != null)
+        {
+            return Results.BadRequest("Користувач з таким іменем чи поштою вже існує!");
+        }
+        if (!bcryptHandler.VerifyHashPass(dto.CurrentPassword!, user.HashPassword!))
+        {
+            return Results.Conflict("Неправильний пароль!");
+        }
+
+        if(dto.Username != null)
+        {
+            user.Username = dto.Username;
+        }
+
+        if(dto.NewPassword != null)
+        {
+            user.HashPassword = bcryptHandler.GenerateHashPass(dto.NewPassword);
+        }
+        bool emailChanged = dto.Email != null && dto.Email != user.Email;
+
+        if (emailChanged)
+        {   
+            user.Email = dto.Email;
+            user.isExsistsEmail = false;
+            user.CodeForConfirmEmail = GenerateCode();
+            await SendMessage(user.Username!,user.Email!,user.CodeForConfirmEmail.Value,configuration);
+            await db.SaveChangesAsync();
+            return Results.Ok("Користувач змінений. Підтвердіть пошту для підтвердження емайлу!");
+        }
+        await db.SaveChangesAsync();
+        return Results.Ok("Користувач змінений!");
     }
 
     public static async Task<IResult> Delete(ClaimsPrincipal claimsUser,UserContext db)
