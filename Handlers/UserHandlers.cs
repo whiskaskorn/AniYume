@@ -42,8 +42,31 @@ public class UserHandler
     }
 
     public static async Task<IResult> GetAll(UserContext db)
-    {   var users = await db.Users.ToListAsync();
-        return Results.Ok(users);
+    {   var user = await db.Users.Select(userFromDb => new UserGetDTO
+        {
+            Id = userFromDb.Id,
+            Username = userFromDb.Username,
+            Email = userFromDb.Email
+        }).ToListAsync();
+        return Results.Ok(user);
+    }
+
+    public static async Task<IResult> GetOne(ClaimsPrincipal claimsUser,UserContext db)
+    {
+        var userIdString = claimsUser.FindFirstValue("Id");
+        if(userIdString == null)
+        {
+            return Results.BadRequest("В клаймах айді не знайдений!");
+        }
+        int userIdInt = Convert.ToInt32(userIdString);
+        var user = await db.Users.Where(x => x.Id == userIdInt).Select(userFromDb => new UserGetDTO
+        {
+            Id = userFromDb.Id,
+            Username = userFromDb.Username,
+            Email = userFromDb.Email
+        }).ToListAsync();
+
+        return Results.Ok(user);
     }
     public static async Task<IResult> Registration(UserRegistrationDTO dto, IValidator<UserRegistrationDTO> validator,UserContext db,BcryptHandler bcryptHandler, IConfiguration configuration)
     {
@@ -72,18 +95,6 @@ public class UserHandler
         db.Users.Add(User);
         await db.SaveChangesAsync();
         return Results.Created();
-    }
-
-    public static async Task<IResult> GetOne(ClaimsPrincipal claimsUser,UserContext db)
-    {
-        var userIdString = claimsUser.FindFirstValue("Id");
-        if(userIdString == null)
-        {
-            return Results.BadRequest("В клаймах айді не знайдений!");
-        }
-        int userIdInt = Convert.ToInt32(userIdString);
-        var user = await db.Users.FindAsync(userIdInt);
-        return Results.Ok(user);
     }
     public static async Task<IResult> ConfirmEmail(UserConfirmEmailDTO dto,IValidator<UserConfirmEmailDTO> validator, UserContext db)
     {
