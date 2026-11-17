@@ -6,5 +6,5 @@ public class Anime
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string[]? Genres { get; set; }
-    public DateTime ReleaseDate { get; set; }
+    public DateTime? ReleaseDate { get; set; }
 }

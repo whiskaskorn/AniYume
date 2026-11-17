@@ -1,4 +1,5 @@
 using Handlers;
+using Models;
 
 namespace Endpoints;
 
@@ -19,8 +20,10 @@ public static class MapEndpoints
 
     public static void MapAnimeEndpoints(WebApplication app)
     {
-        var animeGroup = app.MapGroup("/anime");
-        animeGroup.MapGet("/", AnimeHandler.GetAll);
+        var animeGroup = app.MapGroup("/anime").RequireAuthorization();
+        animeGroup.MapGet("/", AnimeHandler.GetAll).AllowAnonymous();
         animeGroup.MapPost("/",AnimeHandler.Post);
+        animeGroup.MapPut("/{id}",AnimeHandler.Put);
+        animeGroup.MapDelete("/{id}", AnimeHandler.Delete);
     }
 }

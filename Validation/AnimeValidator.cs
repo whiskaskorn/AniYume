@@ -10,6 +10,17 @@ public class AnimePostValidator : AbstractValidator<AnimePostDTO>
         RuleFor(x => x.Name).NotEmpty().WithMessage("Поле не може бути пустим!").Length(1,100).WithMessage("Поле повинно містити від 1 до 100символів!");
         RuleFor(x => x.Description).NotEmpty().WithMessage("Поле не може бути пустим!").Length(1,1000).WithMessage("Поле повинно містити від 1 до 1000символів!");
         RuleFor(x => x.Genres).NotEmpty().WithMessage("Поле не може бути пустим!");
-        RuleFor(x => x.ReleaseDate).InclusiveBetween(new DateTime(1900, 1, 1), DateTime.Today);
+        RuleFor(x => x.ReleaseDate).NotEmpty().WithMessage("Поле не може бути пустим!").InclusiveBetween(new DateTime(1900, 1, 1), DateTime.Today);
+    }
+}
+
+public class AnimePutValidator : AbstractValidator<AnimePutDTO>
+{
+    public AnimePutValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().When(x => x.Name != null).WithMessage("Поле не може бути пустим!").Length(1,100).WithMessage("Поле повинно містити від 1 до 100символів!");
+        RuleFor(x => x.Description).NotEmpty().When(x => x.Description != null).WithMessage("Поле не може бути пустим!").Length(1,1000).WithMessage("Поле повинно містити від 1 до 1000символів!");
+        RuleFor(x => x.Genres).NotEmpty().When(x => x.Genres != null).WithMessage("Поле не може бути пустим!");
+        RuleFor(x => x.ReleaseDate).NotEmpty().InclusiveBetween(new DateTime(1900, 1, 1), DateTime.Today).When(x => x.ReleaseDate != null);
     }
 }

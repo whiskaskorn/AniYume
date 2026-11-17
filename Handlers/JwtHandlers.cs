@@ -26,7 +26,8 @@ public class JwtHandler
         {
             new Claim("Id",Convert.ToString(user.Id)),
             new Claim("Username", user.Username!),
-            new Claim("Email", user.Email!)
+            new Claim("Email", user.Email!),
+            new Claim(ClaimTypes.Role,user.Roles![0])
         };
         var jwtToken = new JwtSecurityToken(
             expires: DateTime.UtcNow.AddHours(1),

@@ -89,7 +89,8 @@ public class UserHandler
             Username = dto.Username,
             Email = dto.Email,
             HashPassword = bcryptHandler.GenerateHashPass(dto.Password!),
-            CodeForConfirmEmail = code
+            CodeForConfirmEmail = code,
+            Roles = ["User"]
         };
 
         db.Users.Add(User);

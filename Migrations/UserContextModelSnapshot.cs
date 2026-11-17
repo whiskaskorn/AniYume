@@ -39,7 +39,7 @@ namespace AniYume.Api.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("ReleaseDate")
+                    b.Property<DateTime?>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -63,6 +63,9 @@ namespace AniYume.Api.Migrations
 
                     b.Property<string>("HashPassword")
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Roles")
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Username")
                         .HasColumnType("text");

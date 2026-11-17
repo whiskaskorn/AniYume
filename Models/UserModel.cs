@@ -8,4 +8,5 @@ public class User
     public string? HashPassword { get; set; }
     public bool isExsistsEmail { get; set; } = false;
     public int? CodeForConfirmEmail { get; set; } = null;
+    public string[]? Roles { get; set; }
 }
