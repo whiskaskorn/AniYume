@@ -9,9 +9,24 @@ namespace Handlers;
 
 public class AnimeHandler
 {
-    public static async Task<IResult> GetAll(AppDbContext db)
+    public static async Task<IResult> GetAll(AppDbContext db, [AsParameters] QueryParametersDTO dto)
     {
-        var anime = await db.Animes.ToListAsync();
+        var page = Math.Max(dto.Page, 1);
+        var pageSize = Math.Clamp(dto.PageSize, 1, 50);
+
+        var query = db.Animes.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(dto.Search))
+        {
+            var search = dto.Search.ToLower();
+            query = query.Where(a => a.Name!.ToLower().Contains(search));
+        }
+
+        var anime = await query
+        .OrderBy(a => a.Id)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
         
         return Results.Ok(anime);
     }
