@@ -11,22 +11,17 @@ public class AnimeHandler
 {
     public static async Task<IResult> GetAll(AppDbContext db)
     {
-        var anime = await db.Animes.Select(animeFromDb => new AnimeGetDTO
-        {
-            Name = animeFromDb.Name,
-            Description = animeFromDb.Description,
-            Genres = animeFromDb.Genres,
-            ReleaseDate = animeFromDb.ReleaseDate
-        }).ToListAsync();
-        if(anime == null)
-        {
-            return Results.NotFound("Аніме не знайдено!");
-        }
+        var anime = await db.Animes.ToListAsync();
+        
         return Results.Ok(anime);
     }
 
-    public static async Task<IResult> Post(AnimePostDTO dto,IValidator<AnimePostDTO> validator, AppDbContext db)
+    public static async Task<IResult> Post(AnimePostDTO dto,IValidator<AnimePostDTO> validator,ClaimsPrincipal claimsUser, AppDbContext db)
     {
+        if(!claimsUser.IsInRole("Admin"))
+        {
+            return Results.BadRequest("Такі права доступні лише для адміна!");
+        }
         var validationResult = validator.Validate(dto);
         if (!validationResult.IsValid)
         {
@@ -57,7 +52,6 @@ public class AnimeHandler
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var userRole = claimsUser.FindFirst(ClaimTypes.Role)?.Value;
         if(!claimsUser.IsInRole("Admin"))
         {
             return Results.BadRequest("Такі права доступні лише для адміна!");

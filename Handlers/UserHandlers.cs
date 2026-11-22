@@ -83,7 +83,6 @@ public class UserHandler
         }
 
         int code = GenerateCode();
-        await SendMessage(dto.Username!,dto.Email!,code, configuration);
 
         var User = new User{
             Username = dto.Username,
@@ -95,6 +94,8 @@ public class UserHandler
 
         db.Users.Add(User);
         await db.SaveChangesAsync();
+
+        await SendMessage(dto.Username!,dto.Email!,code, configuration);
         return Results.Created();
     }
     public static async Task<IResult> ConfirmEmail(UserConfirmEmailDTO dto,IValidator<UserConfirmEmailDTO> validator, AppDbContext db)
@@ -128,7 +129,7 @@ public class UserHandler
         var user = await db.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
         if(user == null)
         {
-            return Results.BadRequest("Користувача з такою поштою не знайдено!");
+            return Results.BadRequest("Неправильна пошта або пароль!");
         }
 
         if (user.isExsistsEmail == false)
@@ -138,7 +139,7 @@ public class UserHandler
 
         if(!bcryptHandler.VerifyHashPass(dto.Password!, user.HashPassword!))
         {
-            return Results.BadRequest("Неправильний пароль!");
+            return Results.BadRequest("Неправильна пошта або пароль!");
         }
 
         var jwtToken = jwtHandler.GenerateToken(user);
@@ -209,8 +210,13 @@ public class UserHandler
         }
         int userIdInt = Convert.ToInt32(userIdString);
         var user = await db.Users.FindAsync(userIdInt);
-        db.Users.Remove(user!);
+        if(user == null)
+        {
+            return Results.NotFound("Такого користувача не існує");
+        }
+        
+        db.Users.Remove(user);
         await db.SaveChangesAsync();
-        return Results.Ok(user);
+        return Results.NoContent();
     }
 }
